@@ -62,9 +62,18 @@ class AutoSyncController(
     companion object {
         private const val TAG = "AutoSyncController"
         private const val MAX_AUTOFILL_ATTEMPTS = 3
-        private const val OVERALL_TIMEOUT_MS = 180_000L
+        private const val OVERALL_TIMEOUT_MS = 240_000L
         private const val IMPORT_TIMEOUT_MS = 90_000L
+
+        /** 登录成功后，等待教务首页（index_initMenu）稳定的时间。 */
+        private const val HOME_WAIT_MS = 5_000L
+
+        /** 课表页加载完成后，等待课表数据 AJAX 刷新的时间。 */
+        private const val TABLE_WAIT_MS = 6_000L
     }
+
+    /** 分步流程阶段。 */
+    private enum class Phase { IDLE, LOGIN, WAIT_HOME, GO_TABLE, WAIT_TABLE, IMPORT }
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
@@ -72,7 +81,7 @@ class AutoSyncController(
     private var autofillAttempts = 0
     private var submitted = false
     private var adapterRan = false
-    private var navigatedToTable = false
+    private var phase = Phase.IDLE
     private var finished = false
     private var timeoutPosted = false
 
@@ -133,6 +142,13 @@ class AutoSyncController(
         }, OVERALL_TIMEOUT_MS)
     }
 
+    /**
+     * 页面加载完成后的分步流程：
+     *  1) 登录页 → 自动填写/提交（需要验证码则暂停等待人工输入）
+     *  2) 登录成功 → 等待教务首页稳定（HOME_WAIT_MS）
+     *  3) 跳转到课表页
+     *  4) 课表页加载完成 → 等待数据刷新（TABLE_WAIT_MS）→ 执行适配脚本导入
+     */
     private fun postPageFinished(url: String) {
         inject(AutoLoginScripts.JS_PROBE) { raw ->
             val probe = parseProbe(raw)
@@ -140,30 +156,56 @@ class AutoSyncController(
                 Log.w(TAG, "探测结果解析失败: $raw")
                 return@inject
             }
-            Log.d(TAG, "probe=$probe")
+            Log.d(TAG, "onPageFinished phase=$phase probe=$probe")
 
-            when {
-                isLoggedIn(url, probe) -> {
-                    if (!navigatedToTable && !url.contains("/kbcx/")) {
-                        // 已登录但尚未处于课表页：自动跳转到课表查询页
-                        navigatedToTable = true
-                        _status.value = "登录成功，正在打开课表页…"
-                        webView?.loadUrl(config.importUrl)
-                    } else {
-                        runAdapter()
-                    }
-                }
-                probe.hasUser && probe.hasPwd -> handleLoginPage(probe)
-                submitted && !adapterRan -> {
-                    // 已提交且不再是登录页，视为登录成功
-                    runAdapter()
-                }
-                else -> {
-                    // 未知页面，稍作等待
-                    _status.value = "正在等待页面加载…"
-                }
+            if (probe.hasUser && probe.hasPwd) {
+                handleLoginPage(probe)
+            } else {
+                handleLoggedInPage(url)
             }
         }
+    }
+
+    /** 已不再是登录页：按阶段推进「等首页 → 跳课表 → 等刷新 → 导入」。 */
+    private fun handleLoggedInPage(url: String) {
+        if (finished || adapterRan) return
+
+        val lower = url.lowercase()
+        val onJwglxt = lower.contains("/jwglxt/") &&
+                !lower.contains("login") &&
+                !lower.contains("authserver")
+        if (!onJwglxt) {
+            _status.value = "正在等待登录完成…"
+            return
+        }
+
+        if (url.contains("/kbcx/")) {
+            // 已处于课表查询页：等待课表数据刷新后导入
+            if (phase != Phase.WAIT_TABLE && phase != Phase.IMPORT) {
+                phase = Phase.WAIT_TABLE
+                _status.value = "课表页已加载，等待课表数据刷新…"
+                webView?.postDelayed({
+                    if (!adapterRan && !finished) runAdapter()
+                }, TABLE_WAIT_MS)
+            }
+            return
+        }
+
+        // 已登录但不在课表页（例如首页 index_initMenu）：先等首页稳定，再跳课表页
+        if (phase == Phase.IDLE || phase == Phase.LOGIN) {
+            phase = Phase.WAIT_HOME
+            _status.value = "登录成功，等待教务首页加载…"
+            webView?.postDelayed({
+                if (!finished && !adapterRan) navigateToTable()
+            }, HOME_WAIT_MS)
+        }
+    }
+
+    private fun navigateToTable() {
+        if (finished || adapterRan) return
+        phase = Phase.GO_TABLE
+        _status.value = "正在打开课表页…"
+        webView?.loadUrl(config.importUrl)
     }
 
     private fun handleLoginPage(probe: PageProbe) {
@@ -178,6 +220,7 @@ class AutoSyncController(
             return
         }
         autofillAttempts++
+        phase = Phase.LOGIN
         _state.value = AutoSyncState.LOGGING_IN
         _status.value = "正在自动填写账号密码…"
 
@@ -203,8 +246,9 @@ class AutoSyncController(
     private fun runAdapter() {
         if (adapterRan || finished) return
         adapterRan = true
+        phase = Phase.IMPORT
         _state.value = AutoSyncState.IMPORTING
-        _status.value = "登录成功，正在导入课表…"
+        _status.value = "正在导入课表…"
 
         // 1. 确保桥接已注入（幂等）
         inject(JS_BRIDGE_INIT)
@@ -292,15 +336,6 @@ class AutoSyncController(
         } catch (e: Exception) {
             null
         }
-    }
-
-    private fun isLoggedIn(url: String, probe: PageProbe): Boolean {
-        val lower = url.lowercase()
-        val onJwglxt = lower.contains("/jwglxt/") &&
-                !lower.contains("login") &&
-                !lower.contains("authserver")
-        val noLoginForm = !probe.hasUser && !probe.hasPwd
-        return onJwglxt || (noLoginForm && submitted && lower.contains("/jwglxt"))
     }
 
     private val JS_AUTO_ANSWER: String = """
