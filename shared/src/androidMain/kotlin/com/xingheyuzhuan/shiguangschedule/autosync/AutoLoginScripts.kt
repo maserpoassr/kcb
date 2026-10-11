@@ -4,9 +4,9 @@ package com.xingheyuzhuan.shiguangschedule.autosync
  * 自动登录 / 探测用 JS 片段。
  *
  * 兼容两类常见教务登录页：
- *  - 正方/金智统一身份认证（authserver）：存在多个登录面板
- *    （#pwdLoginDiv 账号密码 / #phoneLoginDiv 手机验证码 / #fidoLoginDiv / #qrLoginDiv），
- *    且各面板内 id 重复（#username、#login_submit 等），必须**限定在可见面板内**查找。
+ *  - 正方/金智统一身份认证（authserver，实际渲染于 authserver.<域名>）：
+ *    页面里存在多个同名元素（#username / #password / #login_submit 各有多份），
+ *    其中一部分处于 display:none 的隐藏面板内。因此统一采用「优先可见元素」策略。
  *  - 正方经典登录页（jwglxt/xtgl/login_slogin）：#yhm / #mm / #yzm
  *
  * 所有片段均返回 JSON 字符串，由 Kotlin 侧解析。
@@ -36,7 +36,10 @@ object AutoLoginScripts {
     }
 
     /**
-     * 公共 JS 工具：可见性判断 + 定位当前可见登录面板（优先账号密码面板）。
+     * 公共 JS 工具：
+     *  - __sgVisible(el)      可见性判断
+     *  - __sgPanel()          当前可见的登录面板（无则返回 document）
+     *  - __sgFirst(root, sels) 按选择器顺序取「第一个可见」元素，找不到再退回首元素
      */
     private val JS_HELPERS = """
         function __sgVisible(el){
@@ -54,25 +57,35 @@ object AutoLoginScripts {
           }
           return document;
         }
+        function __sgFirst(root, sels){
+          var i, j, list;
+          for(i=0;i<sels.length;i++){
+            list = root.querySelectorAll(sels[i]);
+            for(j=0;j<list.length;j++){ if(__sgVisible(list[j])) return list[j]; }
+          }
+          for(i=0;i<sels.length;i++){
+            list = root.querySelectorAll(sels[i]);
+            if(list.length) return list[0];
+          }
+          return null;
+        }
     """.trimIndent()
 
-    /** 探测当前页面状态（在可见面板内判断账号/密码/验证码/按钮）。 */
+    /** 探测当前页面状态（优先可见元素）。 */
     val JS_PROBE: String = """
         (function(){
           try {
             $JS_HELPERS
             var root = __sgPanel();
-            var q = function(s){ return root.querySelector(s); };
-            var u = q('#username') || q('input[name="username"]') || q('#yhm') || q('input[name="yhm"]');
-            var p = q('#password') || q('input[name="passwordText"]') || q('input[type="password"]') || q('#mm') || q('input[name="mm"]');
-            var capDiv = q('#captchaDiv');
-            var capImg = q('#captchaImg');
-            var capInput = q('#captcha') || q('#yzm');
+            var u = __sgFirst(root, ['#username','input[name="username"]','#yhm','input[name="yhm"]']);
+            var p = __sgFirst(root, ['#password','input[name="passwordText"]','input[type="password"]','#mm','input[name="mm"]']);
+            var capDiv = __sgFirst(root, ['#captchaDiv']);
+            var capImg = __sgFirst(root, ['#captchaImg']);
+            var capInput = __sgFirst(root, ['#captcha','#yzm']);
             var capVisible = (capDiv && __sgVisible(capDiv) && String(capDiv.className).indexOf('hide') < 0)
                           || (capImg && __sgVisible(capImg))
                           || (capInput && __sgVisible(capInput));
-            var btn = q('#login_submit') || q('#loginButton') || q('#dl') || q('.login-btn')
-                   || q('button[type="submit"]') || q('input[type="submit"]');
+            var btn = __sgFirst(root, ['#login_submit','#loginButton','#dl','.login-btn','button[type="submit"]','input[type="submit"]']);
             return JSON.stringify({
               url: location.href,
               path: location.pathname,
@@ -86,7 +99,7 @@ object AutoLoginScripts {
         })();
     """.trimIndent()
 
-    /** 在可见面板内自动填充账号密码（去除 readonly），并触发页面的验证码检查。 */
+    /** 自动填充账号密码（填所有匹配项，并去除 readonly），再触发页面的验证码检查。 */
     fun jsAutoFill(username: String, password: String): String = """
         (function(u, p){
           try {
@@ -114,17 +127,15 @@ object AutoLoginScripts {
         })(${jsString(username)}, ${jsString(password)});
     """.trimIndent()
 
-    /** 点击**可见面板内**的登录按钮 / 提交表单。 */
+    /** 点击**可见**的登录按钮 / 提交表单。 */
     val JS_SUBMIT: String = """
         (function(){
           try {
             $JS_HELPERS
             var root = __sgPanel();
-            var q = function(s){ return root.querySelector(s); };
-            var btn = q('#login_submit') || q('#loginButton') || q('#dl') || q('.login-btn')
-                    || q('button[type="submit"]') || q('input[type="submit"]');
-            if (btn) { btn.click(); return 'clicked:' + ((root && root.id) ? root.id : 'document'); }
-            var form = root.querySelector('form');
+            var btn = __sgFirst(root, ['#login_submit','#loginButton','#dl','.login-btn','button[type="submit"]','input[type="submit"]']);
+            if (btn) { btn.click(); return 'clicked:' + (btn.id || btn.className || 'button'); }
+            var form = __sgFirst(root, ['form']);
             if (form) { form.submit(); return 'submitted'; }
             return 'no-button';
           } catch (e) { return 'error:' + e; }
