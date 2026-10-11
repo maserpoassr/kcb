@@ -29,10 +29,20 @@ enum class AutoSyncState { IDLE, LOGGING_IN, NEED_CAPTCHA, IMPORTING, DONE, ERRO
 private data class PageProbe(
     val url: String = "",
     val path: String = "",
+    val panel: String = "",
     @SerialName("hasUser") val hasUser: Boolean = false,
     @SerialName("hasPwd") val hasPwd: Boolean = false,
     @SerialName("captchaVisible") val captchaVisible: Boolean = false,
     @SerialName("hasButton") val hasButton: Boolean = false,
+    val error: String? = null
+)
+
+/** 自动填充结果（对应 [AutoLoginScripts.jsAutoFill] 的返回值）。 */
+@Serializable
+private data class FillResult(
+    val panel: String = "",
+    @SerialName("filledUser") val filledUser: Int = 0,
+    @SerialName("filledPwd") val filledPwd: Int = 0,
     val error: String? = null
 )
 
@@ -62,6 +72,7 @@ class AutoSyncController(
     private var autofillAttempts = 0
     private var submitted = false
     private var adapterRan = false
+    private var navigatedToTable = false
     private var finished = false
     private var timeoutPosted = false
 
@@ -132,7 +143,16 @@ class AutoSyncController(
             Log.d(TAG, "probe=$probe")
 
             when {
-                isLoggedIn(url, probe) -> runAdapter()
+                isLoggedIn(url, probe) -> {
+                    if (!navigatedToTable && !url.contains("/kbcx/")) {
+                        // 已登录但尚未处于课表页：自动跳转到课表查询页
+                        navigatedToTable = true
+                        _status.value = "登录成功，正在打开课表页…"
+                        webView?.loadUrl(config.importUrl)
+                    } else {
+                        runAdapter()
+                    }
+                }
                 probe.hasUser && probe.hasPwd -> handleLoginPage(probe)
                 submitted && !adapterRan -> {
                     // 已提交且不再是登录页，视为登录成功
@@ -161,15 +181,19 @@ class AutoSyncController(
         _state.value = AutoSyncState.LOGGING_IN
         _status.value = "正在自动填写账号密码…"
 
-        inject(AutoLoginScripts.jsAutoFill(config.username, plainPassword)) {
+        inject(AutoLoginScripts.jsAutoFill(config.username, plainPassword)) { fillRaw ->
+            val fill = parseFill(fillRaw)
+            Log.d(TAG, "autofill=$fill")
             // 填充后重新探测是否需要验证码
             inject(AutoLoginScripts.JS_PROBE) { raw2 ->
                 val probe2 = parseProbe(raw2)
                 if (probe2?.captchaVisible == true) {
                     _state.value = AutoSyncState.NEED_CAPTCHA
                     _status.value = "该账号需要验证码：请在上方页面输入验证码并点击登录，完成后将自动导入课表。"
+                } else if (fill != null && fill.filledPwd == 0) {
+                    _status.value = "未找到密码输入框，请手动输入密码后点击登录。"
                 } else {
-                    _status.value = "正在登录…"
+                    _status.value = "已填写账号密码（面板 ${fill?.panel ?: "?"}），正在登录…"
                     inject(AutoLoginScripts.JS_SUBMIT) { submitted = true }
                 }
             }
@@ -255,6 +279,16 @@ class AutoSyncController(
             // evaluateJavascript 返回的是 JSON 编码后的字符串，需先解一层
             val inner = json.decodeFromString<String>(raw)
             json.decodeFromString<PageProbe>(inner)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun parseFill(raw: String?): FillResult? {
+        if (raw.isNullOrBlank() || raw == "null") return null
+        return try {
+            val inner = json.decodeFromString<String>(raw)
+            json.decodeFromString<FillResult>(inner)
         } catch (e: Exception) {
             null
         }
