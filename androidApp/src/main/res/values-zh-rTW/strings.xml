@@ -1,0 +1,49 @@
+<resources>
+    <!-- 應用基礎資訊 -->
+    <string name="app_name">拾光課程表</string>
+
+    <string name="action_confirm">確定</string>
+    <string name="action_cancel">取消</string>
+    <string name="label_none">無</string>
+    <string name="text_no_courses_today">今天沒有課程</string>
+    <string name="title_vacation_until_start">假期中（距離開學還有%1$s天）</string>
+    <string name="course_position_prefix">地點: %1$s</string>
+    <string name="course_teacher_prefix">老師: %1$s</string>
+    <string name="title_current_week">第 %1$s 週</string>
+    <string name="title_vacation">假期中</string>
+    <string name="status_semester_ended">學期已結束 %d 天</string>
+    <string-array name="week_days_names">
+        <item>週一</item>
+        <item>週二</item>
+        <item>週三</item>
+        <item>週四</item>
+        <item>週五</item>
+        <item>週六</item>
+        <item>週日</item>
+    </string-array>
+    <string name="notification_title_course_alert">上課提醒</string>
+    <string name="notification_live_status_preparing">準備上課</string>
+    <string name="notification_unknown_course">未知課程</string>
+    <string name="notification_unknown_position">地點未知</string>
+    <string name="widget_name_tiny">超小課程2x1</string>
+    <string name="widget_name_compact">緊湊課程2x2</string>
+    <string name="widget_name_double_days">近日課程4x2</string>
+    <string name="widget_name_list_vertical">垂直列表課表4xN</string>
+    <string name="widget_tomorrow_course_preview">明日預告</string>
+    <string name="widget_no_courses_tomorrow">明天沒有課程</string>
+    <string name="widget_today_courses_finished">今日課程已結束</string>
+    <string name="widget_vacation_expecting">期待新學期</string>
+    <string name="widget_days_until_term_start">距離開學還有%1$d天</string>
+    <string name="widget_remaining_courses_format_today">今日還有 %1$d 節課</string>
+    <string name="widget_remaining_courses_format_tomorrow">明天有 %1$d 節課</string>
+    <string name="widget_title_today">今天</string>
+    <string name="widget_title_tomorrow">明天</string>
+    <string name="widget_course_total_count">共有 %1$d 節</string>
+    <string name="item_course_reminder">課程提醒</string>
+    <string name="action_close">關閉</string>
+    <string name="status_current_week_format">第 %1$d 週</string>
+    <string name="text_no_course">無課程</string>
+    <string name="widget_course_remaining_count">剩餘 %1$d 節</string>
+
+    <string name="intent_import_course_table">匯入課表</string>
+</resources>

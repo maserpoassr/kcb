@@ -1,0 +1,48 @@
+<resources>
+    <!-- Basic App Information -->
+    <string name="app_name">Shiguang Schedule</string>
+
+    <string name="action_confirm">Confirm</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="label_none">None</string>
+    <string name="text_no_courses_today">No courses today</string>
+    <string name="title_vacation_until_start">Vacation (%1$s days left)</string>
+    <string name="course_position_prefix">Location: %1$s</string>
+    <string name="course_teacher_prefix">Instructor: %1$s</string>
+    <string name="title_current_week">Week %1$s</string>
+    <string name="title_vacation">On vacation</string>
+    <string name="status_semester_ended">Semester ended %d days ago</string>
+    <string-array name="week_days_names">
+        <item>MON</item>
+        <item>TUE</item>
+        <item>WED</item>
+        <item>THU</item>
+        <item>FRI</item>
+        <item>SAT</item>
+        <item>SUN</item>
+    </string-array>
+    <string name="notification_title_course_alert">Class reminder</string>
+    <string name="notification_live_status_preparing">Pre-class</string>
+    <string name="notification_unknown_course">Unknown Course</string>
+    <string name="notification_unknown_position">Unknown Location</string>
+    <string name="widget_name_tiny">Tiny 2x1</string>
+    <string name="widget_name_compact">Compact 2x2</string>
+    <string name="widget_name_double_days">Recent Days 4x2</string>
+    <string name="widget_name_list_vertical">Vertical Course List 4xN</string>
+    <string name="widget_tomorrow_course_preview">Next Day</string>
+    <string name="widget_no_courses_tomorrow">No courses tomorrow</string>
+    <string name="widget_today_courses_finished">Today\'s classes ended.</string>
+    <string name="widget_vacation_expecting">Looking forward to new semester</string>
+    <string name="widget_days_until_term_start">%1$d days until school starts</string>
+    <string name="widget_remaining_courses_format_today">%1$d courses left today</string>
+    <string name="widget_remaining_courses_format_tomorrow">%1$d courses tomorrow</string>
+    <string name="widget_title_today">Today</string>
+    <string name="widget_title_tomorrow">Tomorrow</string>
+    <string name="widget_course_total_count">%1$d total</string>
+    <string name="item_course_reminder">Course reminders</string>
+    <string name="action_close">Close</string>
+    <string name="status_current_week_format">Week %1$d</string>
+    <string name="text_no_course">No courses</string>
+    <string name="widget_course_remaining_count">%1$d left</string>
+    <string name="intent_import_course_table">Import Schedule</string>
+</resources>
