@@ -34,6 +34,9 @@ jobs:
   build-apk:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -89,3 +92,20 @@ jobs:
           path: androidApp/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: 发布到 GitHub Releases（附带 APK 安装包）
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: autosync-build
+          name: 拾光课程表 · 自动同步版
+          body: |
+            含「教务课表自动同步」改动的构建产物（自动生成）。
+
+            - 安装前请先卸载官方版本（签名不同）。
+            - 若同时构建了 debug 与 release，会一并附上，请优先安装 release 版本。
+          files: |
+            androidApp/build/outputs/apk/**/*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
