@@ -54,12 +54,14 @@ import shiguangschedule.shared.generated.resources.a11y_back
 import shiguangschedule.shared.generated.resources.a11y_details
 import shiguangschedule.shared.generated.resources.arrow_back_24px
 import shiguangschedule.shared.generated.resources.chevron_right_24px
+import shiguangschedule.shared.generated.resources.desc_auto_sync
 import shiguangschedule.shared.generated.resources.desc_backup_restore
 import shiguangschedule.shared.generated.resources.desc_export_ics_with_alarm
 import shiguangschedule.shared.generated.resources.desc_export_json_with_config
 import shiguangschedule.shared.generated.resources.desc_import_json
 import shiguangschedule.shared.generated.resources.desc_school_import_quick
 import shiguangschedule.shared.generated.resources.desc_sync_to_system_calendar
+import shiguangschedule.shared.generated.resources.item_auto_sync
 import shiguangschedule.shared.generated.resources.item_backup_restore
 import shiguangschedule.shared.generated.resources.item_export_course_file
 import shiguangschedule.shared.generated.resources.item_export_ics_file
