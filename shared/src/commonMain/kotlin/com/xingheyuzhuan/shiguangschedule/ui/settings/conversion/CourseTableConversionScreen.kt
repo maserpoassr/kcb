@@ -38,7 +38,6 @@ import com.xingheyuzhuan.shiguangschedule.Destination
 import com.xingheyuzhuan.shiguangschedule.data.di.AppStorage
 import com.xingheyuzhuan.shiguangschedule.tool.ExternalFileManager
 import com.xingheyuzhuan.shiguangschedule.tool.FileManagerCallbacks
-import com.xingheyuzhuan.shiguangschedule.tool.openAutoSyncSettings
 import com.xingheyuzhuan.shiguangschedule.tool.rememberFileManager
 import com.xingheyuzhuan.shiguangschedule.ui.components.ShareDialog
 import kotlinx.coroutines.launch
@@ -54,14 +53,12 @@ import shiguangschedule.shared.generated.resources.a11y_back
 import shiguangschedule.shared.generated.resources.a11y_details
 import shiguangschedule.shared.generated.resources.arrow_back_24px
 import shiguangschedule.shared.generated.resources.chevron_right_24px
-import shiguangschedule.shared.generated.resources.desc_auto_sync
 import shiguangschedule.shared.generated.resources.desc_backup_restore
 import shiguangschedule.shared.generated.resources.desc_export_ics_with_alarm
 import shiguangschedule.shared.generated.resources.desc_export_json_with_config
 import shiguangschedule.shared.generated.resources.desc_import_json
 import shiguangschedule.shared.generated.resources.desc_school_import_quick
 import shiguangschedule.shared.generated.resources.desc_sync_to_system_calendar
-import shiguangschedule.shared.generated.resources.item_auto_sync
 import shiguangschedule.shared.generated.resources.item_backup_restore
 import shiguangschedule.shared.generated.resources.item_export_course_file
 import shiguangschedule.shared.generated.resources.item_export_ics_file
@@ -252,12 +249,6 @@ fun CourseTableConversionScreen(
                         title = stringResource(Res.string.item_school_system_import),
                         desc = stringResource(Res.string.desc_school_import_quick),
                         onClick = { onNavigate(Destination.SchoolSelectionListScreen) }
-                    )
-                    HorizontalDivider()
-                    ConversionRow(
-                        title = stringResource(Res.string.item_auto_sync),
-                        desc = stringResource(Res.string.desc_auto_sync),
-                        onClick = { openAutoSyncSettings() }
                     )
                 }
             }

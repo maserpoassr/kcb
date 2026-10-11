@@ -96,11 +96,12 @@ jobs:
       - name: 发布到 GitHub Releases（附带 APK 安装包）
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: autosync-build
-          name: 拾光课程表 · 自动同步版
+          tag_name: latest
+          name: 拾光课程表 · PEU 适配版
           body: |
-            含「教务课表自动同步」改动的构建产物（自动生成）。
+            在原版基础上，于「课表导入/导出 → 教务系统导入」中新增了「普洱学院（PEU）」适配。
 
+            - 手动导入：教务系统导入 → 普洱学院 → 登录后点击「执行导入」。
             - 安装前请先卸载官方版本（签名不同）。
             - 若同时构建了 debug 与 release，会一并附上，请优先安装 release 版本。
           files: |

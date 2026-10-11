@@ -80,13 +80,6 @@
             </intent-filter>
         </activity>
 
-        <!-- 教务课表自动同步页面 -->
-        <activity
-            android:name="com.xingheyuzhuan.shiguangschedule.autosync.AutoSyncActivity"
-            android:exported="false"
-            android:launchMode="singleTop"
-            android:theme="@style/Theme.shiguangschedule" />
-
         <receiver
             android:name=".service.CourseAlarmReceiver"
             android:enabled="true"

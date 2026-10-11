@@ -637,8 +637,4 @@
     <string name="holiday_picker_hint_select_end">请选择结束日期(单天点击确认即可)</string>
     <string name="holiday_picker_hint_select_start">点击选择开始日期</string>
 
-    <!-- 教务课表自动同步 -->
-    <string name="item_auto_sync">教务课表自动同步</string>
-    <string name="desc_auto_sync">保存账号后每周自动登录教务系统并导入最新课表</string>
-
 </resources>

@@ -2,8 +2,6 @@ package com.xingheyuzhuan.shiguangschedule
 
 import android.app.Application
 import androidx.work.Configuration
-import com.xingheyuzhuan.shiguangschedule.autosync.AutoSyncScheduler
-import com.xingheyuzhuan.shiguangschedule.autosync.AutoSyncSchedulerBridge
 import com.xingheyuzhuan.shiguangschedule.data.di.SharedModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -35,9 +33,5 @@ class MyApplication : Application(), Configuration.Provider {
             androidContext(this@MyApplication)
             workManagerFactory()
         }
-
-        // 注册自动同步调度桥接，并按当前配置恢复周期任务
-        AutoSyncSchedulerBridge.onReschedule = { AutoSyncScheduler.schedule(this@MyApplication) }
-        AutoSyncScheduler.schedule(this@MyApplication)
     }
 }
